@@ -1,15 +1,15 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 function Dashboard() {
+  const navigate = useNavigate();
+
   return (
     <div>
       <h2>Dashboard</h2>
-      <ul>
-        <li><Link to="/create-item">Create Item</Link></li>
-        <li><Link to="/create-customer">Create Customer</Link></li>
-        <li><Link to="/create-transaction">Create Transaction</Link></li>
-      </ul>
+        <p style={{ cursor: 'pointer' }} onClick={() => navigate('/item-dashboard')}>Item Dashboard</p>
+        <p style={{ cursor: 'pointer' }} onClick={() => navigate('/customer-dashboard')}>Customer Dashboard</p>
+        <p style={{ cursor: 'pointer' }} onClick={() => navigate('/transaction-dashboard')}>Transaction Dashboard</p>
     </div>
   );
 }
