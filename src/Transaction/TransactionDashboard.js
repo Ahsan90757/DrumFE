@@ -9,7 +9,7 @@ function TransactionDashboard() {
       <h2>Transaction Dashboard</h2>
 
       <p style={{ cursor: 'pointer' }} onClick={() => navigate('/create-transaction')}>Create a Transaction</p>
-
+      <p style={{ cursor: 'pointer' }} onClick={() => navigate('/search-transaction')}>Search a Transaction</p>
     </div>
   );
 }

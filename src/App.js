@@ -10,6 +10,7 @@ import DeleteCustomer from './Customer/DeleteCustomer';
 import ItemDashboard from './Item/ItemDashboard';
 import CustomerDashboard from './Customer/CustomerDashboard';
 import TransactionDashboard from './Transaction/TransactionDashboard';
+import SearchTransaction from './Transaction/SearchTransaction';
 
 function App() {
   return (
@@ -31,7 +32,7 @@ function App() {
         {/* TRANSACTION ROUTES */}
         <Route path="/transaction-dashboard" element={<TransactionDashboard />} />
         <Route path="/create-transaction" element={<CreateTransaction />} />
-
+        <Route path="/search-transaction" element={<SearchTransaction />} />
      
       </Routes>
     </Router>
