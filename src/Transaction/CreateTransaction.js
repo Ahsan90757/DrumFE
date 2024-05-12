@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 function CreateTransaction() {
-  const [type, setType] = useState('');
+  const [type, setType] = useState('selling');
   const [date, setDate] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [receivedBy, setReceivedBy] = useState('');
@@ -14,6 +14,79 @@ function CreateTransaction() {
   const [customerSearchText, setCustomerSearchText] = useState('');
   const [matchingCustomers, setMatchingCustomers] = useState([]);
   const [allCustomers, setAllCustomers] = useState([]);
+
+  const [selectedAccounts, setSelectedAccounts] = useState([]);
+  const [accountSearchText, setAccountSearchText] = useState('');
+  const [allAccounts, setAllAccounts] = useState([]);
+  const [matchingAccounts, setMatchingAccounts] = useState([]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  useEffect(() => {
+    // Fetch all accounts from the backend API when component mounts
+    const fetchAccounts = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/accounts');
+        if (response.ok) {
+          const data = await response.json();
+          setAllAccounts(data);
+        } else {
+          console.error('Failed to fetch items:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    };
+    fetchAccounts();
+  }, []);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const handleAccountSelect = (selectedAccount) => {
+    const isAlreadySelected = selectedAccounts.some(account => account.id === selectedAccount.id);
+    if (!isAlreadySelected) {
+      const updatedSelectedAccounts = [...selectedAccounts, { ...selectedAccount, paymentMethod: '', amountReceived:0 }];
+      setSelectedAccounts(updatedSelectedAccounts);
+    }
+    setItemSearchText('');
+    setMatchingItems([]);
+  };
+
+
+
+
+
+
+
+
+
+
+
+
 
 
   useEffect(() => {
@@ -95,27 +168,34 @@ function CreateTransaction() {
       // If search text is empty, clear the matching customers
       setMatchingCustomers([]);
     } else {
-      // Filter customers based on search text
+      // Filter customers based on search text (name or phone number)
       const filteredCustomers = allCustomers.filter(customer =>
-        customer.customerName.toLowerCase().includes(text.toLowerCase())
+        customer.customerName.toLowerCase().includes(text.toLowerCase()) ||
+        customer.customerNumber.includes(text)
       );
       setMatchingCustomers(filteredCustomers);
     }
   };
 
   const handleItemSelect = (selectedItem) => {
-    // Check if the selected item is already in the selected items list
     const isAlreadySelected = selectedItems.some(item => item.name === selectedItem.name);
     if (!isAlreadySelected) {
-      // Add selected item to the list of selected items with initial price per unit and quantity to purchase
-      const updatedSelectedItems = [...selectedItems, { ...selectedItem, pricePerUnit: '', quantityToPurchase: '' }];
+      const updatedSelectedItems = [...selectedItems, { ...selectedItem, pricePerUnit: '', quantityToPurchase: 0 }];
       setSelectedItems(updatedSelectedItems);
     }
-    // Clear search text and matching items after item selection
     setItemSearchText('');
     setMatchingItems([]);
   };
   
+  const handleQuantityToPurchaseChange = (index, value) => {
+    const updatedSelectedItems = [...selectedItems];
+    updatedSelectedItems[index].quantityToPurchase = value;
+    setSelectedItems(updatedSelectedItems);
+    // Adjust remaining quantity based on transaction type
+    const remainingQuantity = updatedSelectedItems[index].remainingQuantity;
+    const purchaseQuantity = parseInt(value) || 0;
+    updatedSelectedItems[index].remainingQuantity = type === 'buying' ? remainingQuantity + purchaseQuantity : remainingQuantity - purchaseQuantity;
+  };
 
   const handleCustomerSelect = (selectedCustomer) => {
     // Set the selected customer
@@ -124,7 +204,7 @@ function CreateTransaction() {
     setCustomerSearchText('');
     setMatchingCustomers([]);
   };
-  
+
 
   const handlePricePerUnitChange = (index, value) => {
     // Update the price per unit for the item at the specified index in the selected items list
@@ -133,12 +213,12 @@ function CreateTransaction() {
     setSelectedItems(updatedSelectedItems);
   };
 
-  const handleQuantityToPurchaseChange = (index, value) => {
-    // Update the quantity to purchase for the item at the specified index in the selected items list
-    const updatedSelectedItems = [...selectedItems];
-    updatedSelectedItems[index].quantityToPurchase = value;
-    setSelectedItems(updatedSelectedItems);
-  };
+  // const handleQuantityToPurchaseChange = (index, value) => {
+  //   // Update the quantity to purchase for the item at the specified index in the selected items list
+  //   const updatedSelectedItems = [...selectedItems];
+  //   updatedSelectedItems[index].quantityToPurchase = value;
+  //   setSelectedItems(updatedSelectedItems);
+  // };
 
   const handleRemoveItem = (index) => {
     // Remove item from the list of selected items
@@ -179,14 +259,23 @@ function CreateTransaction() {
 
     try {
       const response = await fetch("http://localhost:8080/api/transactions", requestOptions);
-      const result = await response.text();
-      console.log(result);
-      // Handle success
+      if (response.ok) {
+        const result = await response.text();
+        console.log(result);
+        // Show success message to user
+        alert("Transaction created successfully!");
+        // You can also reset the form or perform any other necessary action here
+      } else {
+        // Handle error response
+        alert("Failed to create transaction. Please try again later.");
+      }
     } catch (error) {
       console.error(error);
-      // Handle error
+      // Handle network error
+      alert("Network error. Please check your internet connection and try again.");
     }
   };
+  
 
 
   const handleTypeChange = (e) => {
@@ -207,143 +296,182 @@ function CreateTransaction() {
 
   return (
     <div>
-      <h2>Create Transaction</h2>
-      <form onSubmit={handleSubmit}>
-        
-        <div>
-          <label htmlFor="type">Type:</label>
-          <select id="type" value={type} onChange={handleTypeChange}>
-            <option value="selling">Selling (to customer)</option>
-            <option value="buying">Buying (from customer)</option>
-          </select>
-        </div>
+      <h2 style={{ textAlign: 'center' }}>CREATE BILL</h2>
 
-        <div>
-          <label htmlFor="search">Search Item:</label>
-          <input
-            type="text"
-            id="search"
-            value={itemSearchText}
-            onChange={(e) => handleItemSearch(e.target.value)}
-          />
-          {itemSearchText.trim() !== '' && (
-            <ul>
-              {matchingItems.map((item, index) => (
-                <li key={index} onClick={() => handleItemSelect(item)}>
-                  {item.name} - Remaining Quantity: {item.remainingQuantity}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <div>
-          <h3>Selected Items:</h3>
-          <ul>
-            {selectedItems.map((item, index) => (
-              <li key={index}>
-                {item.name} - Remaining Quantity: {item.remainingQuantity}
-                <div>
-                  <label htmlFor={`pricePerUnit-${index}`}>Price per Unit:</label>
-                  <input
-                    type="number"
-                    id={`pricePerUnit-${index}`}
-                    value={item.pricePerUnit}
-                    onChange={(e) => handlePricePerUnitChange(index, e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label htmlFor={`quantityToPurchase-${index}`}>Quantity to Purchase:</label>
-                  <input
-                    type="number"
-                    id={`quantityToPurchase-${index}`}
-                    value={item.quantityToPurchase}
-                    onChange={(e) => handleQuantityToPurchaseChange(index, e.target.value)}
-                  />
-                </div>
-                {item.pricePerUnit && item.quantityToPurchase && (
-                  <p>Total Amount for this Item: {item.pricePerUnit * item.quantityToPurchase}</p>
-                )}
-                <button type="button" onClick={() => handleRemoveItem(index)}>Remove</button>
-              </li>
-            ))}
-          </ul>
-        </div>
+      <div>
+    <label htmlFor="transactionType">Transaction Type:</label>
+    <select id="transactionType" defaultValue={type} onChange={(e) => setType(e.target.value)}>
+      <option  value="selling">Selling (to customer)</option>
+      <option value="buying">Buying (from vendor)</option>
+    </select>
+  </div>
 
-        <div>
-          <label htmlFor="searchCustomer">Search Customer:</label>
-          <input
-            type="text"
-            id="searchCustomer"
-            value={customerSearchText}
-            onChange={(e) => handleCustomerSearch(e.target.value)}
-          />
-          {customerSearchText.trim() !== '' && (
-            <ul>
-              {matchingCustomers.map((customer, index) => (
-                <li key={index} onClick={() => handleCustomerSelect(customer)}>
-                  {customer.customerName + "  " + customer.customerNumber}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <div>
-          <h3>Selected Customer:</h3>
-          <p>{selectedCustomer ? "Customer Name = " + selectedCustomer.customerName+  "  Customer Number = " +selectedCustomer.customerNumber : 'No customer selected'}</p>
-        </div>
+      {/* Customer Information */}
+      <div style={{ marginBottom: '20px' }}>
+  <h3>{type === 'selling' ? 'Customer Information' : 'Vendor Information'}</h3>
+  {!selectedCustomer ? (
+    <>
+      <div style={{ marginBottom: '10px' }}>
+        <label htmlFor="search">{type === 'selling' ? 'Search Customer:' : 'Search Vendor:'}</label>
+        <input
+          type="text"
+          id="search"
+          value={customerSearchText}
+          onChange={(e) => handleCustomerSearch(e.target.value)}
+        />
+      </div>
+      {customerSearchText.trim() !== '' && (
+        <ul>
+          {matchingCustomers.map((customer, index) => (
+            <li
+              key={index}
+              onClick={() => handleCustomerSelect(customer)}
+              style={{ cursor: 'pointer' }}
+            >
+              {`${customer.customerName} ${customer.customerNumber}`}
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  ) : (
+    <div style={{ marginBottom: '10px' }}>
+      <p>{type === 'selling' ? 'Customer Name:' : 'Vendor Name:'} {selectedCustomer.customerName}</p>
+      <p>{type === 'selling' ? 'Customer Number:' : 'Vendor Number:'} {selectedCustomer.customerNumber}</p>
+      <button onClick={() => {
+        setSelectedCustomer(null);
+        setCustomerSearchText('');
+      }}>Clear Selection</button>
+    </div>
+  )}
+</div>
 
-        <h3>Total :</h3>
-        <div>
-          <label htmlFor="amountReceived">Amount Received:</label>
-          <input
-            type="number"
-            id="amountReceived"
-            value={amountReceived}
-            onChange={handleAmountReceivedChange}
-          />
-        </div>
-        <div>
+
+<div style={{ marginBottom: '10px' }}>
+  <p>Invoice Number: </p>
+</div>
+
+
+      {/* Items Table */}
+<div style={{ marginBottom: '20px' }}>
+  <h3>Items</h3>
+  <div style={{ marginBottom: '10px' }}>
+    <label htmlFor="itemSearch">Search Item:</label>
+    <input
+      type="text"
+      id="itemSearch"
+      value={itemSearchText}
+      onChange={(e) => handleItemSearch(e.target.value)}
+    />
+  </div>
+  {itemSearchText.trim() !== '' && (
+    <ul>
+      {matchingItems.map((item, index) => (
+        <li key={index} onClick={() => handleItemSelect(item)}
+          style={{ cursor: 'pointer' }}
+        >
+          {item.name} - Remaining Quantity: {item.remainingQuantity}
+        </li>
+      ))}
+    </ul>
+  )}
+  <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '10px', textAlign: 'center' }}>
+    <thead>
+      <tr>
+        <th style={{ border: '1px solid #ddd', padding: '8px' }}>Sr No</th>
+        <th style={{ border: '1px solid #ddd', padding: '8px' }}>Item Description</th>
+        <th style={{ border: '1px solid #ddd', padding: '8px' }}>Remaining Quantity</th>
+        <th style={{ border: '1px solid #ddd', padding: '8px' }}>Purchase Quantity</th>
+        <th style={{ border: '1px solid #ddd', padding: '8px' }}>Price per unit</th>
+        <th style={{ border: '1px solid #ddd', padding: '8px' }}>Total</th>
+        <th style={{ border: '1px solid #ddd', padding: '8px' }}>Remove</th> {/* New column for remove button */}
+      </tr>
+    </thead>
+    <tbody>
+      {selectedItems.map((item, index) => (
+        <tr key={index}>
+          <td style={{ border: '1px solid #ddd', padding: '8px' }}>{index + 1}</td>
+          <td style={{ border: '1px solid #ddd', padding: '8px' }}>{item.name}</td>
+          <td style={{ border: '1px solid #ddd', padding: '8px' }}>{item.remainingQuantity}</td>
+          <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+            <input
+              type="number"
+              value={item.quantityToPurchase || ''}
+              onChange={(e) => {
+                const newQuantity = e.target.value === '' || isNaN(e.target.value) ? 0 : parseInt(e.target.value);
+                const initialRemainingQuantity = type === 'buying' ? item.remainingQuantity - item.quantityToPurchase : item.remainingQuantity + item.quantityToPurchase;
+                const updatedItems = selectedItems.map((selectedItem, i) => {
+                  if (i === index) {
+                    return {
+                      ...selectedItem,
+                      quantityToPurchase: newQuantity,
+                      remainingQuantity: initialRemainingQuantity + (type === 'buying' ? newQuantity : -newQuantity)
+                    };
+                  }
+                  return selectedItem;
+                });
+                setSelectedItems(updatedItems);
+              }}
+            />
+          </td>
+          <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+            <input
+              type="number"
+              value={item.pricePerUnit}
+              onChange={(e) => handlePricePerUnitChange(index, e.target.value)}
+            />
+          </td>
+          <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+            {item.pricePerUnit && item.quantityToPurchase && item.pricePerUnit * item.quantityToPurchase}
+          </td>
+          <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+            <button onClick={() => handleRemoveItem(index)}>X</button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+
+      {/* Summary */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
+        <div style={{ width: '50%', textAlign: 'right' }}>
           <p>Total Amount: {calculateTotalAmount()}</p>
-          {amountReceived && (
-            <p>
-              {calculateRemainingAmount() <= 0 ? 'Remaining Amount:' : 'Extra Amount Paid:'} {Math.abs(calculateRemainingAmount())}
-            </p>
-          )}
+          <div style={{ marginBottom: '10px' }}>
+            <label htmlFor="paymentMethod">Payment Method:</label>
+            <select id="paymentMethod" value={paymentMethod} onChange={handlePaymentMethodChange}>
+              <option value="">Select Payment Method</option>
+              <option value="Cash">Cash</option>
+              <option value="Bank">Bank</option>
+            </select>
+          </div>
+          <div style={{ marginBottom: '10px' }}>
+            <label htmlFor="amountReceived">Amount Received:</label>
+            <input
+              type="number"
+              id="amountReceived"
+              value={amountReceived}
+              onChange={handleAmountReceivedChange}
+            />
+          </div>
+          <p>Balance: {calculateRemainingAmount()}</p>
         </div>
+      </div>
 
-        <div>
-          <label htmlFor="paymentMethod">Payment Method:</label>
-          <select id="paymentMethod" value={paymentMethod} onChange={handlePaymentMethodChange}>
-            <option value="">Select Payment Method</option>
-            <option value="Cash">Cash</option>
-            <option value="Bank">Bank</option>
-          </select>
-          {paymentMethod === 'Cash' && (
-            <div>
-              <label htmlFor="receivedBy">Received By:</label>
-              <input
-                type="text"
-                id="receivedBy"
-                value={receivedBy}
-                onChange={handleReceivedByChange}
-              />
-            </div>
-          )}
-          {paymentMethod === 'Bank' && (
-            <div>
-              <label htmlFor="accountName">Account Name:</label>
-              <input
-                type="text"
-                id="accountName"
-                value={receivedBy}
-                onChange={handleReceivedByChange}
-              />
-            </div>
-          )}
-        </div>
 
-        <button type="submit">Create Transaction</button>
-      </form>
+
+
+
+
+
+
+
+      {/* Submit Button */}
+      <div style={{ textAlign: 'center' }}>
+      <button type="submit" onClick={handleSubmit}>Create Transaction</button>
+
+      </div>
     </div>
   );
 }

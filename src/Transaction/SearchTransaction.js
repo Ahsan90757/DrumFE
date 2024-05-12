@@ -64,6 +64,14 @@ function SearchTransaction() {
           }
     };
 
+    const calculateBalance = (index) => {
+        let balance = 0;
+        for (let i = 0; i <= index; i++) {
+          balance += customerTransactions[i].totalAmount - customerTransactions[i].amountReceived;
+        }
+        return balance;
+      };
+
     return (
         <div>
             <div>
@@ -89,33 +97,37 @@ function SearchTransaction() {
                 <p>{selectedCustomer ? "Customer Name = " + selectedCustomer.customerName + "  Customer Number = " + selectedCustomer.customerNumber : 'No customer selected'}</p>
             </div>
             
-            {selectedCustomer && (
-        <div>
-          <h3>Transactions for {selectedCustomer.customerName}</h3>
-          <ul>
-            {customerTransactions.map((transaction, index) => (
-              <li key={index}>
-                <p>Date: {new Date(transaction.date).toLocaleDateString()}</p>
-                <p>Type: {transaction.transactionType}</p>
-                <p>Payment Method: {transaction.paymentMethod}</p>
-                <p>Amount Received: {transaction.amountReceived}</p>
-                <p>Total Amount: {transaction.totalAmount}</p>
-                <p>Received By: {transaction.receivedBy}</p>
-                <h4>Transaction Items:</h4>
-                <ul>
-                  {transaction.transactionItems.map((item, itemIndex) => (
-                    <li key={itemIndex}>
-                      <p>Item Name: {item.itemName}</p>
-                      <p>Quantity: {item.quantity}</p>
-                      <p>Unit Price: {item.unitPrice}</p>
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+
+            {setSelectedCustomer && (
+  <div>
+    <h2>Ledger</h2>
+    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+      <thead>
+        <tr style={{ backgroundColor: '#f2f2f2' }}>
+          <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>#</th>
+          <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Date</th>
+          <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Description</th>
+          <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Debit</th>
+          <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Credit</th>
+          <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Balance</th>
+        </tr>
+      </thead>
+      <tbody>
+        {customerTransactions.map((transaction, index) => (
+          <tr key={index} style={{ backgroundColor: index % 2 === 0 ? '#f2f2f2' : 'white' }}>
+            <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{index + 1}</td>
+            <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{new Date(transaction.date).toLocaleDateString()}</td>
+            <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{transaction.transactionNumber}</td>
+            <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{transaction.totalAmount}</td>
+            <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{transaction.amountReceived}</td>
+            <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{calculateBalance(index)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
+
 
         </div>
     );
