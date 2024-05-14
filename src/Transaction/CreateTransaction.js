@@ -19,7 +19,7 @@ function CreateTransaction() {
   const [accountSearchText, setAccountSearchText] = useState('');
   const [allAccounts, setAllAccounts] = useState([]);
   const [matchingAccounts, setMatchingAccounts] = useState([]);
-
+  const [invoiceNumber, setInvoiceNumber] = useState('');
 
 
 
@@ -96,13 +96,23 @@ function CreateTransaction() {
 
 
 
-
-
-
-
-
-
-
+  useEffect(() => {
+    // Fetch all items from the backend API when component mounts
+    const fetchInvoiceNumber = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/transactions/topTransaction');
+        if (response.ok) {
+          const data = await response.json();
+          setInvoiceNumber(data.transactionNumber+1);
+        } else {
+          console.error('Failed to fetch invoice number:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    };
+    fetchInvoiceNumber();
+  }, []);
 
 
   useEffect(() => {
@@ -166,6 +176,17 @@ function CreateTransaction() {
     //amountReceived;
       
   };
+
+  const calculateAmountRecieved = () => {
+    const totalAmount = calculateTotalAmount();
+    const totalAccountAmount = selectedAccounts.reduce((total, account) => {
+      return total + account.amount;
+    }, 0);
+    return totalAccountAmount;
+    //amountReceived;
+      
+  };
+  
   
 
   // useEffect(() => {
@@ -284,7 +305,7 @@ function CreateTransaction() {
       date: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD format
       paymentMethod: paymentMethod,
       receivedBy: receivedBy,
-      amountReceived: amountReceived,
+      amountReceived: calculateAmountRecieved(),
       totalAmount: calculateTotalAmount(),
       transactionItems: transactionItems,
       transactionAccounts: transactionAccounts
@@ -323,9 +344,9 @@ function CreateTransaction() {
     setType(e.target.value);
   };
 
-  const handleAmountReceivedChange = (e) => {
-    setAmountReceived(e.target.value);
-  };
+  // const handleAmountReceivedChange = (e) => {
+  //   setAmountReceived(e.target.value);
+  // };
 
   const handlePaymentMethodChange = (e) => {
     setPaymentMethod(e.target.value);
@@ -389,7 +410,7 @@ function CreateTransaction() {
 
 
 <div style={{ marginBottom: '10px' }}>
-  <p>Invoice Number: </p>
+  <p>Invoice Number: {invoiceNumber}</p>
 </div>
 
 

@@ -6,6 +6,7 @@ function TransactionDashboard() {
   const [customers, setCustomers] = useState([]);
   const [positiveBalance, setPositiveBalance] = useState(0);
   const [negativeBalance, setNegativeBalance] = useState(0);
+  const [Balance, setBalance] = useState(0);
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -37,6 +38,7 @@ function TransactionDashboard() {
     });
     setPositiveBalance(positiveSum);
     setNegativeBalance(negativeSum);
+    setBalance(positiveSum+negativeSum);
   };
 
   return (
@@ -44,7 +46,7 @@ function TransactionDashboard() {
       <h2>Transaction Dashboard</h2>
 
       <p style={{ cursor: 'pointer' }} onClick={() => navigate('/create-transaction')}>Create a Transaction</p>
-      <p style={{ cursor: 'pointer' }} onClick={() => navigate('/search-transaction')}>Search a Transaction</p>
+      <p style={{ cursor: 'pointer' }} onClick={() => navigate('/search-transaction')}>Search Customer Ledger</p>
     
       <div>
       <h2>Customers</h2>
@@ -75,6 +77,9 @@ function TransactionDashboard() {
       </div>
       <div style={{ marginTop: '5px' }}>
         <strong>Total Negative Balance:</strong> {negativeBalance}
+      </div>
+      <div style={{ marginTop: '5px' }}>
+        <strong>Total Balance:</strong> {Balance}
       </div>
     </div>
 
