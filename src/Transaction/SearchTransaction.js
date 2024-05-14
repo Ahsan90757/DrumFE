@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 
 function SearchTransaction() {
 
-
-
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [customerSearchText, setCustomerSearchText] = useState('');
     const [matchingCustomers, setMatchingCustomers] = useState([]);
     const [allCustomers, setAllCustomers] = useState([]);
     const [customerTransactions, setCustomerTransactions] = useState([]);
+    const [balance, setBalance] = useState(0);
+
 
     useEffect(() => {
         // Fetch all customers from the backend API when component mounts
@@ -62,15 +62,23 @@ function SearchTransaction() {
         } catch (error) {
             console.error('Error:', error);
           }
+          resetCumulativeBalance();
     };
 
-    const calculateBalance = (index) => {
-        let balance = 0;
-        for (let i = 0; i <= index; i++) {
-          balance += customerTransactions[i].totalAmount - customerTransactions[i].amountReceived;
-        }
-        return balance;
-      };
+    let cumulativeBalance =0;
+    function calculateBalance(transaction) {
+      cumulativeBalance = cumulativeBalance+transaction.totalAmount;
+      return cumulativeBalance;
+    }
+    // Function to calculate balance for a specific account within a transaction
+    function calculateAccountBalance(account, currentIndex) {
+      cumulativeBalance = cumulativeBalance-account.amount
+      return cumulativeBalance;
+    }
+    function resetCumulativeBalance() {
+      cumulativeBalance = 0;
+  }
+
 
     return (
         <div>
@@ -98,35 +106,50 @@ function SearchTransaction() {
             </div>
             
 
-            {setSelectedCustomer && (
-  <div>
-    <h2>Ledger</h2>
-    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
-      <thead>
-        <tr style={{ backgroundColor: '#f2f2f2' }}>
-          <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>#</th>
-          <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Date</th>
-          <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Description</th>
-          <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Debit</th>
-          <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Credit</th>
-          <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Balance</th>
-        </tr>
-      </thead>
-      <tbody>
-        {customerTransactions.map((transaction, index) => (
-          <tr key={index} style={{ backgroundColor: index % 2 === 0 ? '#f2f2f2' : 'white' }}>
-            <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{index + 1}</td>
-            <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{new Date(transaction.date).toLocaleDateString()}</td>
-            <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{transaction.transactionNumber}</td>
-            <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{transaction.totalAmount}</td>
-            <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{transaction.amountReceived}</td>
-            <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{calculateBalance(index)}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-)}
+        {setSelectedCustomer && (
+          <div>
+            <h2>Ledger</h2>
+            <div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f2f2f2' }}>
+                    <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>#</th>
+                    <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Date</th>
+                    <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Description</th>
+                    <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Debit</th>
+                    <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Credit</th>
+                    <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Balance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {customerTransactions.map((transaction, index) => (
+                    <React.Fragment key={index}>
+                      <tr style={{ backgroundColor: '#ffffff' }}>
+                        <td style={{ fontWeight: 'bold', padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{index + 1}</td>
+                        <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{new Date(transaction.date).toLocaleDateString()}</td>
+                        <td style={{ fontWeight: 'bold', padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Transaction {transaction.transactionNumber}</td>
+                        <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{transaction.totalAmount}</td>
+                        <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>0</td>
+                        <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{calculateBalance(transaction)}</td>
+                      </tr>
+                      {transaction.transactionAccounts.map((account, accIndex) => (
+                        <tr key={accIndex} style={{ backgroundColor: '#ffffff' }}>
+                          <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}></td>
+                          <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{new Date(transaction.date).toLocaleDateString()}</td>
+                          <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{account.accountName}</td>
+                          <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>0</td>
+                          <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{account.amount}</td>
+                          <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{calculateAccountBalance(account, accIndex)}</td>
+                        </tr>
+                      ))}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
 
 
         </div>

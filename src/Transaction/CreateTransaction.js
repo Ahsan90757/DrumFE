@@ -33,7 +33,6 @@ function CreateTransaction() {
 
 
 
-
   useEffect(() => {
     // Fetch all accounts from the backend API when component mounts
     const fetchAccounts = async () => {
@@ -52,30 +51,47 @@ function CreateTransaction() {
     fetchAccounts();
   }, []);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   const handleAccountSelect = (selectedAccount) => {
     const isAlreadySelected = selectedAccounts.some(account => account.id === selectedAccount.id);
     if (!isAlreadySelected) {
-      const updatedSelectedAccounts = [...selectedAccounts, { ...selectedAccount, paymentMethod: '', amountReceived:0 }];
+      const updatedSelectedAccounts = [...selectedAccounts, { ...selectedAccount, amount:0 }];
       setSelectedAccounts(updatedSelectedAccounts);
     }
     setItemSearchText('');
     setMatchingItems([]);
   };
+  const handleAccountSearch = (text) => {
+    setAccountSearchText(text);
+    if (text.trim() === '') {
+      // If search text is empty, clear the matching items
+      setMatchingAccounts([]);
+    } else {
+      // Filter items based on search text
+      const filteredAccounts = allAccounts.filter(account =>
+        account.accountName.toLowerCase().includes(text.toLowerCase())
+      );
+      setMatchingAccounts(filteredAccounts);
+    }
+  };
 
+  const handleRemoveAccount = (index) => {
+    // Remove item from the list of selected items
+    const updatedAccounts = [...selectedAccounts];
+    updatedAccounts.splice(index, 1);
+    setSelectedAccounts(updatedAccounts);
+  };
+
+
+
+
+
+
+
+
+
+
+
+ 
 
 
 
@@ -137,16 +153,35 @@ function CreateTransaction() {
   };
 
   // Function to calculate the remaining or overpayment amount
+  // const calculateRemainingAmount = () => {
+  //   const totalAmount = calculateTotalAmount();
+  //   return amountReceived - totalAmount;
+  // };
   const calculateRemainingAmount = () => {
     const totalAmount = calculateTotalAmount();
-    return amountReceived - totalAmount;
+    const totalAccountAmount = selectedAccounts.reduce((total, account) => {
+      return total + account.amount;
+    }, 0);
+    return totalAmount- totalAccountAmount;
+    //amountReceived;
+      
   };
+  
 
+  // useEffect(() => {
+  //   // Calculate the total amount whenever selectedItems or amountReceived change
+  //   const totalAmount = calculateTotalAmount();
+  //   console.log('Total Amount:', totalAmount);
+  // }, [selectedItems, amountReceived]);
   useEffect(() => {
-    // Calculate the total amount whenever selectedItems or amountReceived change
+    // Calculate the total amount whenever selectedItems, amountReceived, or selectedAccounts change
     const totalAmount = calculateTotalAmount();
+    const totalAccountAmount = selectedAccounts.reduce((total, account) => {
+      return total + account.amount;
+    }, 0);
     console.log('Total Amount:', totalAmount);
-  }, [selectedItems, amountReceived]);
+  }, [selectedItems, amountReceived, selectedAccounts]);
+  
 
   const handleItemSearch = (text) => {
     setItemSearchText(text);
@@ -238,6 +273,10 @@ function CreateTransaction() {
       unitPrice: item.pricePerUnit,
       quantity: item.quantityToPurchase
     }));
+    const transactionAccounts = selectedAccounts.map(account => ({
+      accountName: account.accountName,
+      amount : account.amount
+    }));
 
     const raw = JSON.stringify({
       customerNumber: selectedCustomer.customerNumber,
@@ -247,8 +286,10 @@ function CreateTransaction() {
       receivedBy: receivedBy,
       amountReceived: amountReceived,
       totalAmount: calculateTotalAmount(),
-      transactionItems: transactionItems
+      transactionItems: transactionItems,
+      transactionAccounts: transactionAccounts
     });
+
 
     const requestOptions = {
       method: "POST",
@@ -434,11 +475,65 @@ function CreateTransaction() {
 </div>
 
 
+{/* Accounts Table */}
+<div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+  <h3>Accounts</h3>
+  <div style={{ marginBottom: '10px' }}>
+    <label htmlFor="accountSearch">Search Account:</label>
+    <input
+      type="text"
+      id="accountSearch"
+      value={accountSearchText}
+      onChange={(e) => handleAccountSearch(e.target.value)}
+    />
+  </div>
+  {accountSearchText.trim() !== '' && (
+    <ul>
+      {matchingAccounts.map((account, index) => (
+        <li key={index} onClick={() => handleAccountSelect(account)}
+          style={{ cursor: 'pointer' }}
+        >
+          {account.accountName}
+        </li>
+      ))}
+    </ul>
+  )}
+ 
+ <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+  <h3>Selected Accounts</h3>
+  {selectedAccounts.map((account, index) => (
+    <div key={index} style={{ marginBottom: '10px' }}>
+      <span>{account.accountName}</span>
+      <input
+        type="number"
+        value={account.amount}
+        onChange={(e) => {
+          const updatedAccounts = selectedAccounts.map((selectedAccount, i) => {
+            if (i === index) {
+              return {
+                ...selectedAccount,
+                amount: parseInt(e.target.value)
+              };
+            }
+            return selectedAccount;
+          });
+          setSelectedAccounts(updatedAccounts);
+        }}
+      />
+      <button onClick={() => handleRemoveAccount(index)}>X</button>
+    </div>
+  ))}
+</div>
+
+</div>
+
+
+
       {/* Summary */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
         <div style={{ width: '50%', textAlign: 'right' }}>
           <p>Total Amount: {calculateTotalAmount()}</p>
-          <div style={{ marginBottom: '10px' }}>
+          {/* <div style={{ marginBottom: '10px' }}>
             <label htmlFor="paymentMethod">Payment Method:</label>
             <select id="paymentMethod" value={paymentMethod} onChange={handlePaymentMethodChange}>
               <option value="">Select Payment Method</option>
@@ -454,10 +549,41 @@ function CreateTransaction() {
               value={amountReceived}
               onChange={handleAmountReceivedChange}
             />
-          </div>
+          </div> */}
           <p>Balance: {calculateRemainingAmount()}</p>
         </div>
       </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
