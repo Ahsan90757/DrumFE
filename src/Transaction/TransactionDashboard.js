@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function TransactionDashboard() {
-  const navigate = useNavigate();
+  
   const [customers, setCustomers] = useState([]);
   const [positiveBalance, setPositiveBalance] = useState(0);
   const [negativeBalance, setNegativeBalance] = useState(0);
   const [Balance, setBalance] = useState(0);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -46,7 +48,7 @@ function TransactionDashboard() {
       <h2>Transaction Dashboard</h2>
 
       <p style={{ cursor: 'pointer' }} onClick={() => navigate('/create-transaction')}>Create a Transaction</p>
-      <p style={{ cursor: 'pointer' }} onClick={() => navigate('/search-transaction')}>Search Customer Ledger</p>
+      <p style={{ cursor: 'pointer' }} onClick={() => navigate('/search-customer-ledger')}>Search Customer Ledger</p>
     
       <div>
       <h2>Customers</h2>
@@ -62,7 +64,7 @@ function TransactionDashboard() {
         </thead>
         <tbody>
           {customers.length > 0 && customers.map((customer, index) => (
-            <tr key={index} style={{ backgroundColor: index % 2 === 0 ? '#f2f2f2' : 'white' }}>
+            <tr key={index} style={{ backgroundColor: index % 2 === 0 ? '#f2f2f2' : 'white' }} onClick={() => navigate(`/search-customer-ledger/${customer.customerNumber}`)}>
               <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{index + 1}</td>
               <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{new Date(customer.lastTransaction).toLocaleDateString()}</td>
               <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{customer.customerName}</td>

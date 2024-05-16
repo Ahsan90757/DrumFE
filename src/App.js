@@ -11,7 +11,7 @@ import ItemDashboard from './Item/ItemDashboard';
 import CustomerDashboard from './Customer/CustomerDashboard';
 import TransactionDashboard from './Transaction/TransactionDashboard';
 import SearchTransaction from './Transaction/SearchTransaction';
-
+import SearchCustomerLedger from './Transaction/SearchCustomerLedger';
 function App() {
   return (
     <Router>
@@ -32,12 +32,13 @@ function App() {
         {/* TRANSACTION ROUTES */}
         <Route path="/transaction-dashboard" element={<TransactionDashboard />} />
         <Route path="/create-transaction" element={<CreateTransaction />} />
-        <Route path="/search-transaction" element={<SearchTransaction />} />
-     
+        <Route path="/search-transaction/:transactionNumber" element={<SearchTransaction/>} />
+        <Route path="/search-customer-ledger/:customerNumber" element={<SearchCustomerLedger />} />
+        <Route path="/search-customer-ledger" element={<SearchCustomerLedger />} />
       </Routes>
     </Router>
   );
 }
 
-
+///:customerNumber
 export default App;

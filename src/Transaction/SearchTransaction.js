@@ -1,159 +1,107 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom'; // Assuming you're using React Router
 
 function SearchTransaction() {
+  const { transactionNumber } = useParams();
+  const [transaction, setTransaction] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    const [selectedCustomer, setSelectedCustomer] = useState(null);
-    const [customerSearchText, setCustomerSearchText] = useState('');
-    const [matchingCustomers, setMatchingCustomers] = useState([]);
-    const [allCustomers, setAllCustomers] = useState([]);
-    const [customerTransactions, setCustomerTransactions] = useState([]);
-    const [balance, setBalance] = useState(0);
-
-
-    useEffect(() => {
-        // Fetch all customers from the backend API when component mounts
-        const fetchCustomers = async () => {
-            try {
-                const response = await fetch('http://localhost:8080/api/customers');
-                if (response.ok) {
-                    const data = await response.json();
-                    setAllCustomers(data);
-                } else {
-                    console.error('Failed to fetch items:', response.statusText);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        };
-        fetchCustomers();
-    }, []);
-
-    const handleCustomerSearch = (text) => {
-        setCustomerSearchText(text);
-        if (text.trim() === '') {
-            // If search text is empty, clear the matching customers
-            setMatchingCustomers([]);
-        } else {
-            // Filter customers based on search text
-            const filteredCustomers = allCustomers.filter(customer =>
-                customer.customerName.toLowerCase().includes(text.toLowerCase())
-            );
-            setMatchingCustomers(filteredCustomers);
-        }
-    };
-
-    const handleCustomerSelect = async (selectedCustomer) => {
-        // Set the selected customer
-        setSelectedCustomer(selectedCustomer);
-        // Clear search text and matching customers after customer selection
-        setCustomerSearchText('');
-        setMatchingCustomers([]);
-
-        try {
-            const response = await fetch(`http://localhost:8080/api/transactions`);
-            if (response.ok) {
-              const data = await response.json();
-              // Filter transactions by selected customer
-              const filteredTransactions = data.filter(transaction => transaction.customerNumber === selectedCustomer.customerNumber);
-              setCustomerTransactions(filteredTransactions);
-            } else {
-              console.error('Failed to fetch transactions:', response.statusText);
-            }
-        } catch (error) {
-            console.error('Error:', error);
+  useEffect(() => {
+    const fetchTransaction = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/transactions');
+        if (response.ok) {
+          const data = await response.json();
+          const foundTransaction = data.find(t => t.transactionNumber === parseInt(transactionNumber));
+          if (foundTransaction) {
+            setTransaction(foundTransaction);
+          } else {
+            setError('Transaction not found');
           }
-          resetCumulativeBalance();
+        } else {
+          setError('Failed to fetch transactions');
+        }
+      } catch (error) {
+        setError('Error fetching transactions');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    let cumulativeBalance =0;
-    function calculateBalance(transaction) {
-      cumulativeBalance = cumulativeBalance+transaction.totalAmount;
-      return cumulativeBalance;
-    }
-    // Function to calculate balance for a specific account within a transaction
-    function calculateAccountBalance(account, currentIndex) {
-      cumulativeBalance = cumulativeBalance-account.amount
-      return cumulativeBalance;
-    }
-    function resetCumulativeBalance() {
-      cumulativeBalance = 0;
+    fetchTransaction();
+  }, [transactionNumber]);
+
+  if (loading) {
+    return <div>Loading...</div>;
   }
 
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+  const formatDate = (dateString) => {
+    const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+    return new Date(dateString).toLocaleDateString('en-GB', options);
+  };
 
-    return (
-        <div>
-            <div>
-                <label htmlFor="searchCustomer">Search Customer:</label>
-                <input
-                    type="text"
-                    id="searchCustomer"
-                    value={customerSearchText}
-                    onChange={(e) => handleCustomerSearch(e.target.value)}
-                />
-                {customerSearchText.trim() !== '' && (
-                    <ul>
-                        {matchingCustomers.map((customer, index) => (
-                            <li key={index} onClick={() => handleCustomerSelect(customer)}>
-                                {customer.customerName + "  " + customer.customerNumber}
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </div>
-            <div>
-                <h3>Selected Customer:</h3>
-                <p>{selectedCustomer ? "Customer Name = " + selectedCustomer.customerName + "  Customer Number = " + selectedCustomer.customerNumber : 'No customer selected'}</p>
-            </div>
-            
+  const totalPaid = transaction.transactionAccounts.reduce((sum, account) => sum + account.amount, 0);
+  const balance = transaction.totalAmount - totalPaid;
 
-        {setSelectedCustomer && (
-          <div>
-            <h2>Ledger</h2>
-            <div>
-              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
-                <thead>
-                  <tr style={{ backgroundColor: '#f2f2f2' }}>
-                    <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>#</th>
-                    <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Date</th>
-                    <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Description</th>
-                    <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Debit</th>
-                    <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Credit</th>
-                    <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Balance</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {customerTransactions.map((transaction, index) => (
-                    <React.Fragment key={index}>
-                      <tr style={{ backgroundColor: '#ffffff' }}>
-                        <td style={{ fontWeight: 'bold', padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{index + 1}</td>
-                        <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{new Date(transaction.date).toLocaleDateString()}</td>
-                        <td style={{ fontWeight: 'bold', padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Transaction {transaction.transactionNumber}</td>
-                        <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{transaction.totalAmount}</td>
-                        <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>0</td>
-                        <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{calculateBalance(transaction)}</td>
-                      </tr>
-                      {transaction.transactionAccounts.map((account, accIndex) => (
-                        <tr key={accIndex} style={{ backgroundColor: '#ffffff' }}>
-                          <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}></td>
-                          <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{new Date(transaction.date).toLocaleDateString()}</td>
-                          <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{account.accountName}</td>
-                          <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>0</td>
-                          <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{account.amount}</td>
-                          <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{calculateAccountBalance(account, accIndex)}</td>
-                        </tr>
-                      ))}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+  return (
+    <div style={{ padding: '20px' }}>
+      <div style={{ marginBottom: '20px' }}>
+        <h2>Transaction Details</h2>
+        <p><strong>Transaction Date:</strong> {formatDate(transaction.date)}</p>
+        <p><strong>Customer Name:</strong> {transaction.customerName}</p>
+        <p><strong>Customer Number:</strong> {transaction.customerNumber}</p>
+      </div>
 
-
-
+      <div style={{ marginBottom: '20px' }}>
+        <h3>Items</h3>
+        <table style={{ width: '100%', borderCollapse: 'collapse', margin: 'auto', textAlign: 'center'}}>
+          <thead>
+            <tr>
+              <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#f2f2f2', fontWeight: 'bold' }}>S.No</th>
+              <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#f2f2f2', fontWeight: 'bold' }}>Item Name</th>
+              <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#f2f2f2', fontWeight: 'bold' }}>Unit Price</th>
+              <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#f2f2f2', fontWeight: 'bold' }}>Quantity</th>
+              <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#f2f2f2', fontWeight: 'bold' }}>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {transaction.transactionItems.map((item, index) => (
+              <tr key={index}>
+                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{index + 1}</td>
+                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{item.itemName}</td>
+                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{item.unitPrice}</td>
+                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{item.quantity}</td>
+                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{item.unitPrice * item.quantity}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div style={{ marginTop: '20px', textAlign: 'right', marginRight: '20px' }}>
+          <p><strong>Total Amount:</strong> {transaction.totalAmount}</p>
         </div>
-    );
+      </div>
+
+      <div style={{ textAlign: 'right', marginRight: '20px' }}>
+        <h3>Payments</h3>
+        {transaction.transactionAccounts.map((account, index) => (
+          <div key={index} style={{ marginBottom: '10px' }}>
+            <p><strong>Account Name:</strong> {account.accountName}</p>
+            <p><strong>Amount:</strong> {account.amount}</p>
+          </div>
+        ))}
+        <div style={{ marginTop: '20px' }}>
+          <p><strong>Total Paid:</strong> {totalPaid}</p>
+        </div>
+        <div style={{ marginTop: '10px' }}>
+          <p><strong>Balance:</strong> {balance}</p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default SearchTransaction;
