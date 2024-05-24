@@ -20,15 +20,7 @@ function CreateTransaction() {
   const [allAccounts, setAllAccounts] = useState([]);
   const [matchingAccounts, setMatchingAccounts] = useState([]);
   const [invoiceNumber, setInvoiceNumber] = useState('');
-
-
-
-
-
-
-
-
-
+  const [Description, setDescription] = useState('');
 
 
 
@@ -308,7 +300,8 @@ function CreateTransaction() {
       amountReceived: calculateAmountRecieved(),
       totalAmount: calculateTotalAmount(),
       transactionItems: transactionItems,
-      transactionAccounts: transactionAccounts
+      transactionAccounts: transactionAccounts,
+      Description : Description
     });
 
 
@@ -355,6 +348,10 @@ function CreateTransaction() {
   const handleReceivedByChange = (e) => {
     setReceivedBy(e.target.value);
   };
+
+  const handleDescriptionChange = (e) =>{
+    setDescription(e.target.value);
+  }
 
   return (
     <div>
@@ -412,6 +409,16 @@ function CreateTransaction() {
 <div style={{ marginBottom: '10px' }}>
   <p>Invoice Number: {invoiceNumber}</p>
 </div>
+
+<div>
+      <label htmlFor="description">Description:</label>
+      <input
+        type="text"
+        id="description"
+        value={Description}
+        onChange={handleDescriptionChange}
+      />
+  </div>
 
 
       {/* Items Table */}
