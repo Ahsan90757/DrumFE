@@ -135,7 +135,9 @@ function SearchCustomerLedger() {
                     <tr style={{ backgroundColor: '#ffffff' }} onClick={() => navigate(`/search-transaction/${transaction.transactionNumber}`)}>
                       <td style={{ fontWeight: 'bold', padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{index + 1}</td>
                       <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{new Date(transaction.date).toLocaleDateString()}</td>
-                      <td style={{ fontWeight: 'bold', padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>Transaction {transaction.transactionNumber + transaction.Description}</td>
+                      <td style={{ fontWeight: 'bold', padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>
+                        Transaction {transaction.transactionNumber + (transaction.Description ? `: ${transaction.Description}` : '')}
+                      </td>
                       <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{transaction.totalAmount}</td>
                       <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>0</td>
                       <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{calculateBalance(transaction)}</td>
