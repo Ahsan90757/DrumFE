@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 function CreateTransaction() {
   const [type, setType] = useState('selling');
@@ -22,7 +23,7 @@ function CreateTransaction() {
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [Description, setDescription] = useState('');
 
-
+  const navigate = useNavigate();
 
 
   useEffect(() => {
@@ -353,6 +354,63 @@ function CreateTransaction() {
     setDescription(e.target.value);
   }
 
+  const handleSubmitAndPrint = async (e) => {
+    e.preventDefault();
+
+    const myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    const transactionItems = selectedItems.map(item => ({
+      itemName: item.name,
+      unitPrice: item.pricePerUnit,
+      quantity: item.quantityToPurchase
+    }));
+    const transactionAccounts = selectedAccounts.map(account => ({
+      accountName: account.accountName,
+      amount : account.amount
+    }));
+
+    const raw = JSON.stringify({
+      customerNumber: selectedCustomer.customerNumber,
+      transactionType: type,
+      date: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD format
+      paymentMethod: paymentMethod,
+      receivedBy: receivedBy,
+      amountReceived: calculateAmountRecieved(),
+      totalAmount: calculateTotalAmount(),
+      transactionItems: transactionItems,
+      transactionAccounts: transactionAccounts,
+      Description : Description
+    });
+
+
+    const requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: raw,
+      redirect: "follow"
+    };
+
+    try {
+      const response = await fetch("http://localhost:8080/api/transactions", requestOptions);
+      if (response.ok) {
+        const result = await response.text();
+        console.log(result);
+        // Show success message to user
+        alert("Transaction created successfully!");
+        navigate(`/search-transaction/${invoiceNumber}`);
+        // You can also reset the form or perform any other necessary action here
+      } else {
+        // Handle error response
+        alert("Failed to create transaction. Please try again later.");
+      }
+    } catch (error) {
+      console.error(error);
+      // Handle network error
+      alert("Network error. Please check your internet connection and try again.");
+    }
+  };
+
   return (
     <div>
       <h2 style={{ textAlign: 'center' }}>CREATE BILL</h2>
@@ -549,6 +607,7 @@ function CreateTransaction() {
         }}
       />
       <button onClick={() => handleRemoveAccount(index)}>X</button>
+      
     </div>
   ))}
 </div>
@@ -583,48 +642,10 @@ function CreateTransaction() {
       </div>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       {/* Submit Button */}
       <div style={{ textAlign: 'center' }}>
       <button type="submit" onClick={handleSubmit}>Create Transaction</button>
-
+      <button type="submit" onClick={handleSubmitAndPrint}>Print Transaction</button>
       </div>
     </div>
   );
