@@ -55,8 +55,10 @@ function SearchTransaction() {
     <div style={{ padding: '20px' }}>
       <div className="print-section">
         <div style={{ marginBottom: '20px' }}>
+          <h2>Irfan Traders</h2>
           <h2>Transaction Details</h2>
           <p><strong>Transaction Date:</strong> {formatDate(transaction.date)}</p>
+          <p><strong>Transaction Number:</strong> {transaction.transactionNumber}</p>
           <p><strong>Customer Name:</strong> {transaction.customerName}</p>
           <p><strong>Customer Number:</strong> {transaction.customerNumber}</p>
         </div>
