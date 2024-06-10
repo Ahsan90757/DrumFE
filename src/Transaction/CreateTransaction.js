@@ -75,20 +75,6 @@ function CreateTransaction() {
   };
 
 
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
   useEffect(() => {
     // Fetch all items from the backend API when component mounts
     const fetchInvoiceNumber = async () => {
@@ -420,6 +406,7 @@ function CreateTransaction() {
     <select id="transactionType" defaultValue={type} onChange={(e) => setType(e.target.value)}>
       <option  value="selling">Selling (to customer)</option>
       <option value="buying">Buying (from vendor)</option>
+      <option value="operations">Operational Costs</option>
     </select>
   </div>
 

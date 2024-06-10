@@ -11,6 +11,7 @@ function Dashboard() {
         <p style={{ cursor: 'pointer' }} onClick={() => navigate('/customer-dashboard')}>Customer Dashboard</p>
         <p style={{ cursor: 'pointer' }} onClick={() => navigate('/transaction-dashboard')}>Transaction Dashboard</p>
         <p style={{ cursor: 'pointer' }} onClick={() => navigate('/account-dashboard')}>Account Dashboard</p>
+        <p style={{ cursor: 'pointer' }} onClick={() => navigate('/income-statement')}>Income Statement</p>
     </div>
   );
 }

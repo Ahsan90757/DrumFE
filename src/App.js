@@ -13,6 +13,7 @@ import TransactionDashboard from './Transaction/TransactionDashboard';
 import SearchTransaction from './Transaction/SearchTransaction';
 import SearchCustomerLedger from './Transaction/SearchCustomerLedger';
 import AccountDashboard from './Account/AccountDashboard';
+import IncomeStatement from './IncomeStatement/IncomeStatement'
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
 
         {/* ACCOUNT ROUTES */}
     <Route path="/account-dashboard" element={<AccountDashboard />} />
+    <Route path="/income-statement" element={<IncomeStatement/>} />
     {/* <Route path="/create-account" element={<CreateAccount />} /> */}
 
       </Routes>

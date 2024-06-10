@@ -76,12 +76,19 @@ function SearchCustomerLedger() {
 
   let cumulativeBalance = 0;
   function calculateBalance(transaction) {
-    cumulativeBalance = cumulativeBalance + transaction.totalAmount;
+    if (transaction.transactionType == "selling")
+      cumulativeBalance = cumulativeBalance + transaction.totalAmount;
+    else if(transaction.transactionType == "buying")
+      cumulativeBalance = cumulativeBalance - transaction.totalAmount;
+
     return cumulativeBalance;
   }
 
   function calculateAccountBalance(account, currentIndex) {
+    if(customerTransactions[currentIndex].transactionType=="selling")
     cumulativeBalance = cumulativeBalance - account.amount;
+    else if(customerTransactions[currentIndex].transactionType=="buying")
+    cumulativeBalance = cumulativeBalance + account.amount;
     return cumulativeBalance;
   }
 
@@ -138,8 +145,18 @@ function SearchCustomerLedger() {
                       <td style={{ fontWeight: 'bold', padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>
                         Transaction {transaction.transactionNumber + (transaction.Description ? `: ${transaction.Description}` : '')}
                       </td>
-                      <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{transaction.totalAmount}</td>
-                      <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>0</td>
+                      {transaction.transactionType === 'selling' ? (
+                        <>
+                          <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{transaction.totalAmount}</td>
+                          <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>0</td>
+
+                        </>
+                      ) : (
+                        <>
+                          <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>0</td>
+                          <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{transaction.totalAmount}</td>
+                        </>
+                      )}
                       <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{calculateBalance(transaction)}</td>
                     </tr>
                     {transaction.transactionAccounts.map((account, accIndex) => (
@@ -147,9 +164,20 @@ function SearchCustomerLedger() {
                         <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}></td>
                         <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{new Date(transaction.date).toLocaleDateString()}</td>
                         <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{account.accountName}</td>
-                        <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>0</td>
-                        <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{account.amount}</td>
-                        <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{calculateAccountBalance(account, accIndex)}</td>
+                        
+                        {transaction.transactionType === 'selling' ? (
+                          <>
+                          <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>0</td>
+                          <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{account.amount}</td>
+                        </>
+                        ) :  (
+                          <>
+                            <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{account.amount}</td>
+                            <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>0</td>
+                          </>
+                          
+                        )}
+                        <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{calculateAccountBalance(account, index)}</td>
                       </tr>
                     ))}
                   </React.Fragment>
