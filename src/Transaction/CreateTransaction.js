@@ -145,12 +145,17 @@ function CreateTransaction() {
   const calculateRemainingAmount = () => {
     const totalAmount = calculateTotalAmount();
     const totalAccountAmount = selectedAccounts.reduce((total, account) => {
-      return total + account.amount;
+      return total + parseFloat(account.amount || 0); // Parse amount as a number
     }, 0);
-    return totalAmount- totalAccountAmount;
-    //amountReceived;
-      
+    return totalAmount - totalAccountAmount;
   };
+  
+  const calculateAmountReceived = () => {
+    return selectedAccounts.reduce((total, account) => {
+      return total + parseFloat(account.amount || 0); // Parse amount as a number
+    }, 0);
+  };
+  
 
   const calculateAmountRecieved = () => {
     const totalAmount = calculateTotalAmount();

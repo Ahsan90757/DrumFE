@@ -10,14 +10,33 @@ function TransactionDashboard() {
 
   const navigate = useNavigate();
 
+  // useEffect(() => {
+  //   const fetchCustomers = async () => {
+  //     try {
+  //       const response = await fetch('http://localhost:8080/api/customers');
+  //       if (response.ok) {
+  //         const data = await response.json();
+  //         setCustomers(data);
+  //         calculateBalances(data);
+  //       } else {
+  //         console.error('Failed to fetch customers:', response.statusText);
+  //       }
+  //     } catch (error) {
+  //       console.error('Error:', error);
+  //     }
+  //   };
+  //   fetchCustomers();
+  // }, []);
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
         const response = await fetch('http://localhost:8080/api/customers');
         if (response.ok) {
           const data = await response.json();
-          setCustomers(data);
-          calculateBalances(data);
+          // Sort by lastTransaction in descending order
+          const sortedData = data.sort((a, b) => new Date(b.lastTransaction) - new Date(a.lastTransaction));
+          setCustomers(sortedData);
+          calculateBalances(sortedData);
         } else {
           console.error('Failed to fetch customers:', response.statusText);
         }
@@ -27,6 +46,7 @@ function TransactionDashboard() {
     };
     fetchCustomers();
   }, []);
+  
 
   const calculateBalances = (customers) => {
     let positiveSum = 0;
@@ -43,6 +63,10 @@ function TransactionDashboard() {
     setBalance(positiveSum+negativeSum);
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <div>
       <h2>Transaction Dashboard</h2>
@@ -50,6 +74,20 @@ function TransactionDashboard() {
       <p style={{ cursor: 'pointer' }} onClick={() => navigate('/create-transaction')}>Create a Transaction</p>
       <p style={{ cursor: 'pointer' }} onClick={() => navigate('/search-customer-ledger')}>Search Customer Ledger</p>
     
+      <style>
+        {`
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+    }
+  `}
+      </style>
+
+          <button className="no-print" onClick={handlePrint}>
+            Print
+          </button>
+
       <div>
       <h2>Customers</h2>
       <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
