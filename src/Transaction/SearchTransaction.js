@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom'; // Assuming you're using React Rou
 function SearchTransaction() {
   const { transactionNumber } = useParams();
   const [transaction, setTransaction] = useState(null);
+  const [customerName, setCustomerName] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -16,6 +17,7 @@ function SearchTransaction() {
           const foundTransaction = data.find(t => t.transactionNumber === parseInt(transactionNumber));
           if (foundTransaction) {
             setTransaction(foundTransaction);
+            fetchCustomerName(foundTransaction.customerNumber); // Fetch customer name
           } else {
             setError('Transaction not found');
           }
@@ -29,6 +31,20 @@ function SearchTransaction() {
       }
     };
 
+    const fetchCustomerName = async (customerNumber) => {
+      try {
+        const response = await fetch(`http://localhost:8080/api/customers/number/${customerNumber}`);
+        if (response.ok) {
+          const customerData = await response.json();
+          setCustomerName(customerData.customerName); // Assuming the customer data includes a 'name' field
+        } else {
+          setCustomerName('Customer not found');
+        }
+      } catch (error) {
+        setCustomerName('Error fetching customer');
+      }
+    };
+
     fetchTransaction();
   }, [transactionNumber]);
 
@@ -39,6 +55,7 @@ function SearchTransaction() {
   if (error) {
     return <div>Error: {error}</div>;
   }
+
   const formatDate = (dateString) => {
     const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-GB', options);
@@ -59,7 +76,7 @@ function SearchTransaction() {
           <h2>Transaction Details</h2>
           <p><strong>Transaction Date:</strong> {formatDate(transaction.date)}</p>
           <p><strong>Transaction Number:</strong> {transaction.transactionNumber}</p>
-          <p><strong>Customer Name:</strong> {transaction.customerName}</p>
+          <p><strong>Customer Name:</strong> {customerName}</p>
           <p><strong>Customer Number:</strong> {transaction.customerNumber}</p>
         </div>
 
@@ -107,16 +124,12 @@ function SearchTransaction() {
             <p><strong>Balance:</strong> {balance}</p>
           </div>
         </div>
-
-
       </div>
-
 
       <div className="no-print">
         <button onClick={handlePrint}>Print this page</button>
       </div>
     </div>
-
   );
 }
 

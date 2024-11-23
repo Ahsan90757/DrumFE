@@ -75,6 +75,7 @@ function CreateTransaction() {
   };
 
 
+
   useEffect(() => {
     // Fetch all items from the backend API when component mounts
     const fetchInvoiceNumber = async () => {
@@ -141,11 +142,6 @@ function CreateTransaction() {
     }, 0);
   };
 
-  // Function to calculate the remaining or overpayment amount
-  // const calculateRemainingAmount = () => {
-  //   const totalAmount = calculateTotalAmount();
-  //   return amountReceived - totalAmount;
-  // };
   const calculateRemainingAmount = () => {
     const totalAmount = calculateTotalAmount();
     const totalAccountAmount = selectedAccounts.reduce((total, account) => {
@@ -168,11 +164,6 @@ function CreateTransaction() {
   
   
 
-  // useEffect(() => {
-  //   // Calculate the total amount whenever selectedItems or amountReceived change
-  //   const totalAmount = calculateTotalAmount();
-  //   console.log('Total Amount:', totalAmount);
-  // }, [selectedItems, amountReceived]);
   useEffect(() => {
     // Calculate the total amount whenever selectedItems, amountReceived, or selectedAccounts change
     const totalAmount = calculateTotalAmount();
@@ -222,15 +213,38 @@ function CreateTransaction() {
     setMatchingItems([]);
   };
   
+  // const handleQuantityToPurchaseChange = (index, value) => {
+  //   const updatedSelectedItems = [...selectedItems];
+  //   updatedSelectedItems[index].quantityToPurchase = value;
+
+  //   // Adjust remaining quantity based on transaction type
+  //   const remainingQuantity = updatedSelectedItems[index].remainingQuantity;
+  //   const purchaseQuantity = value || 0;
+  //   updatedSelectedItems[index].remainingQuantity = type === 'buying' ? remainingQuantity + purchaseQuantity : remainingQuantity - purchaseQuantity;
+  //   setSelectedItems(updatedSelectedItems);
+  // };
   const handleQuantityToPurchaseChange = (index, value) => {
     const updatedSelectedItems = [...selectedItems];
-    updatedSelectedItems[index].quantityToPurchase = value;
+    const quantityToPurchase = parseFloat(value) || 0; // Parse input as a float, fallback to 0 if invalid
+  
+    const item = updatedSelectedItems[index];
+    const originalRemainingQuantity = item.originalRemainingQuantity || item.remainingQuantity;
+  
+    // Update remainingQuantity based on type
+    const remainingQuantity = type === 'buying' 
+      ? originalRemainingQuantity + quantityToPurchase 
+      : originalRemainingQuantity - quantityToPurchase;
+  
+    updatedSelectedItems[index] = {
+      ...item,
+      quantityToPurchase, 
+      remainingQuantity: parseFloat(remainingQuantity.toFixed(6)), // Keep precision under control
+      originalRemainingQuantity // Ensure original value is preserved
+    };
+  
     setSelectedItems(updatedSelectedItems);
-    // Adjust remaining quantity based on transaction type
-    const remainingQuantity = updatedSelectedItems[index].remainingQuantity;
-    const purchaseQuantity = parseInt(value) || 0;
-    updatedSelectedItems[index].remainingQuantity = type === 'buying' ? remainingQuantity + purchaseQuantity : remainingQuantity - purchaseQuantity;
   };
+  
 
   const handleCustomerSelect = (selectedCustomer) => {
     // Set the selected customer
@@ -244,16 +258,10 @@ function CreateTransaction() {
   const handlePricePerUnitChange = (index, value) => {
     // Update the price per unit for the item at the specified index in the selected items list
     const updatedSelectedItems = [...selectedItems];
-    updatedSelectedItems[index].pricePerUnit = value;
+    updatedSelectedItems[index].pricePerUnit = value || 0;
     setSelectedItems(updatedSelectedItems);
   };
 
-  // const handleQuantityToPurchaseChange = (index, value) => {
-  //   // Update the quantity to purchase for the item at the specified index in the selected items list
-  //   const updatedSelectedItems = [...selectedItems];
-  //   updatedSelectedItems[index].quantityToPurchase = value;
-  //   setSelectedItems(updatedSelectedItems);
-  // };
 
   const handleRemoveItem = (index) => {
     // Remove item from the list of selected items
@@ -306,6 +314,7 @@ function CreateTransaction() {
         console.log(result);
         // Show success message to user
         alert("Transaction created successfully!");
+        navigate(`/search-transaction/${invoiceNumber}`);
         // You can also reset the form or perform any other necessary action here
       } else {
         // Handle error response
@@ -323,10 +332,6 @@ function CreateTransaction() {
   const handleTypeChange = (e) => {
     setType(e.target.value);
   };
-
-  // const handleAmountReceivedChange = (e) => {
-  //   setAmountReceived(e.target.value);
-  // };
 
   const handlePaymentMethodChange = (e) => {
     setPaymentMethod(e.target.value);
@@ -406,7 +411,6 @@ function CreateTransaction() {
     <select id="transactionType" defaultValue={type} onChange={(e) => setType(e.target.value)}>
       <option  value="selling">Selling (to customer)</option>
       <option value="buying">Buying (from vendor)</option>
-      <option value="operations">Operational Costs</option>
     </select>
   </div>
 
@@ -509,23 +513,26 @@ function CreateTransaction() {
           <td style={{ border: '1px solid #ddd', padding: '8px' }}>{item.remainingQuantity}</td>
           <td style={{ border: '1px solid #ddd', padding: '8px' }}>
             <input
+              // type="number"
+              // value={item.quantityToPurchase || ''}
+              // onChange={(e) => {
+              //   const newQuantity = e.target.value === '' || isNaN(e.target.value) ? 0 : e.target.value;
+              //   const initialRemainingQuantity = type === 'buying' ? item.remainingQuantity - item.quantityToPurchase : item.remainingQuantity + item.quantityToPurchase;
+              //   const updatedItems = selectedItems.map((selectedItem, i) => {
+              //     if (i === index) {
+              //       return {
+              //         ...selectedItem,
+              //         quantityToPurchase: newQuantity,
+              //         remainingQuantity: initialRemainingQuantity + (type === 'buying' ? newQuantity : -newQuantity)
+              //       };
+              //     }
+              //     return selectedItem;
+              //   });
+              //   setSelectedItems(updatedItems);
+              // }}
               type="number"
-              value={item.quantityToPurchase || ''}
-              onChange={(e) => {
-                const newQuantity = e.target.value === '' || isNaN(e.target.value) ? 0 : parseInt(e.target.value);
-                const initialRemainingQuantity = type === 'buying' ? item.remainingQuantity - item.quantityToPurchase : item.remainingQuantity + item.quantityToPurchase;
-                const updatedItems = selectedItems.map((selectedItem, i) => {
-                  if (i === index) {
-                    return {
-                      ...selectedItem,
-                      quantityToPurchase: newQuantity,
-                      remainingQuantity: initialRemainingQuantity + (type === 'buying' ? newQuantity : -newQuantity)
-                    };
-                  }
-                  return selectedItem;
-                });
-                setSelectedItems(updatedItems);
-              }}
+              value={selectedItems[index].quantityToPurchase}
+              onChange={(e) => handleQuantityToPurchaseChange(index, e.target.value)}
             />
           </td>
           <td style={{ border: '1px solid #ddd', padding: '8px' }}>
@@ -585,7 +592,7 @@ function CreateTransaction() {
             if (i === index) {
               return {
                 ...selectedAccount,
-                amount: parseInt(e.target.value)
+                amount: e.target.value
               };
             }
             return selectedAccount;
@@ -607,23 +614,7 @@ function CreateTransaction() {
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
         <div style={{ width: '50%', textAlign: 'right' }}>
           <p>Total Amount: {calculateTotalAmount()}</p>
-          {/* <div style={{ marginBottom: '10px' }}>
-            <label htmlFor="paymentMethod">Payment Method:</label>
-            <select id="paymentMethod" value={paymentMethod} onChange={handlePaymentMethodChange}>
-              <option value="">Select Payment Method</option>
-              <option value="Cash">Cash</option>
-              <option value="Bank">Bank</option>
-            </select>
-          </div>
-          <div style={{ marginBottom: '10px' }}>
-            <label htmlFor="amountReceived">Amount Received:</label>
-            <input
-              type="number"
-              id="amountReceived"
-              value={amountReceived}
-              onChange={handleAmountReceivedChange}
-            />
-          </div> */}
+          
           <p>Balance: {calculateRemainingAmount()}</p>
         </div>
       </div>
@@ -632,7 +623,7 @@ function CreateTransaction() {
       {/* Submit Button */}
       <div style={{ textAlign: 'center' }}>
       <button type="submit" onClick={handleSubmit}>Create Transaction</button>
-      <button type="submit" onClick={handleSubmitAndPrint}>Print Transaction</button>
+      {/*<button type="submit" onClick={handleSubmitAndPrint}>Print Transaction</button>*/}
       </div>
     </div>
   );
