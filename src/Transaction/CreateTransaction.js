@@ -21,7 +21,7 @@ function CreateTransaction() {
   const [allAccounts, setAllAccounts] = useState([]);
   const [matchingAccounts, setMatchingAccounts] = useState([]);
   const [invoiceNumber, setInvoiceNumber] = useState('');
-  const [Description, setDescription] = useState('');
+  const [description, setDescription] = useState('');
 
   const navigate = useNavigate();
 
@@ -145,17 +145,12 @@ function CreateTransaction() {
   const calculateRemainingAmount = () => {
     const totalAmount = calculateTotalAmount();
     const totalAccountAmount = selectedAccounts.reduce((total, account) => {
-      return total + parseFloat(account.amount || 0); // Parse amount as a number
+      return total + account.amount;
     }, 0);
-    return totalAmount - totalAccountAmount;
+    return totalAmount- totalAccountAmount;
+    //amountReceived;
+      
   };
-  
-  const calculateAmountReceived = () => {
-    return selectedAccounts.reduce((total, account) => {
-      return total + parseFloat(account.amount || 0); // Parse amount as a number
-    }, 0);
-  };
-  
 
   const calculateAmountRecieved = () => {
     const totalAmount = calculateTotalAmount();
@@ -211,7 +206,7 @@ function CreateTransaction() {
   const handleItemSelect = (selectedItem) => {
     const isAlreadySelected = selectedItems.some(item => item.name === selectedItem.name);
     if (!isAlreadySelected) {
-      const updatedSelectedItems = [...selectedItems, { ...selectedItem, pricePerUnit: '', quantityToPurchase: 0 }];
+      const updatedSelectedItems = [...selectedItems, { ...selectedItem, pricePerUnit: '', quantityToPurchase: 0,originalRemainingQuantity:selectedItem.remainingQuantity }];
       setSelectedItems(updatedSelectedItems);
     }
     setItemSearchText('');
@@ -231,15 +226,15 @@ function CreateTransaction() {
   const handleQuantityToPurchaseChange = (index, value) => {
     const updatedSelectedItems = [...selectedItems];
     const quantityToPurchase = parseFloat(value) || 0; // Parse input as a float, fallback to 0 if invalid
-  
+
     const item = updatedSelectedItems[index];
-    const originalRemainingQuantity = item.originalRemainingQuantity || item.remainingQuantity;
+    const originalRemainingQuantity = item.originalRemainingQuantity ;
   
     // Update remainingQuantity based on type
     const remainingQuantity = type === 'buying' 
-      ? originalRemainingQuantity + quantityToPurchase 
+      ? originalRemainingQuantity + quantityToPurchase
       : originalRemainingQuantity - quantityToPurchase;
-  
+
     updatedSelectedItems[index] = {
       ...item,
       quantityToPurchase, 
@@ -301,7 +296,7 @@ function CreateTransaction() {
       totalAmount: calculateTotalAmount(),
       transactionItems: transactionItems,
       transactionAccounts: transactionAccounts,
-      Description : Description
+      description : description
     });
 
 
@@ -376,7 +371,7 @@ function CreateTransaction() {
       totalAmount: calculateTotalAmount(),
       transactionItems: transactionItems,
       transactionAccounts: transactionAccounts,
-      Description : Description
+      description : description
     });
 
 
@@ -469,7 +464,7 @@ function CreateTransaction() {
       <input
         type="text"
         id="description"
-        value={Description}
+        value={description}
         onChange={handleDescriptionChange}
       />
   </div>

@@ -67,28 +67,16 @@ function SearchTransaction() {
   const handlePrint = () => {
     window.print();
   };
-  
 
   return (
-
-
     <div style={{ padding: '20px' }}>
-      <style>
-        {`
-    @media print {
-      .no-print {
-        display: none !important;
-      }
-    }
-  `}
-      </style>
-
       <div className="print-section">
         <div style={{ marginBottom: '20px' }}>
           <h2>Irfan Traders</h2>
           <h2>Transaction Details</h2>
           <p><strong>Transaction Date:</strong> {formatDate(transaction.date)}</p>
           <p><strong>Transaction Number:</strong> {transaction.transactionNumber}</p>
+          <p><strong>Description:</strong> {transaction.description}</p>
           <p><strong>Customer Name:</strong> {customerName}</p>
           <p><strong>Customer Number:</strong> {transaction.customerNumber}</p>
         </div>
@@ -142,7 +130,17 @@ function SearchTransaction() {
       <div className="no-print">
         <button onClick={handlePrint}>Print this page</button>
       </div>
-
+      
+      {/* CSS to hide the print button on print */}
+      <style>
+        {`
+          @media print {
+            .no-print {
+              display: none;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }
