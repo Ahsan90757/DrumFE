@@ -22,6 +22,7 @@ function CreateTransaction() {
   const [matchingAccounts, setMatchingAccounts] = useState([]);
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [description, setDescription] = useState('');
+  const [reminder, setReminder] = useState('');
 
   const navigate = useNavigate();
 
@@ -145,22 +146,21 @@ function CreateTransaction() {
   const calculateRemainingAmount = () => {
     const totalAmount = calculateTotalAmount();
     const totalAccountAmount = selectedAccounts.reduce((total, account) => {
-      return total + account.amount;
+      return total + parseFloat(account.amount || 0); // Parse amount as a number
     }, 0);
     return totalAmount- totalAccountAmount;
     //amountReceived;
       
   };
 
-  const calculateAmountRecieved = () => {
-    const totalAmount = calculateTotalAmount();
-    const totalAccountAmount = selectedAccounts.reduce((total, account) => {
-      return total + account.amount;
-    }, 0);
-    return totalAccountAmount;
-    //amountReceived;
+  // const calculateAmountRecieved = () => {
+    const calculateAmountRecieved = () => {
+      return selectedAccounts.reduce((total, account) => {
+        return total + parseFloat(account.amount || 0); // Parse amount as a number
+      }, 0);
+    };
       
-  };
+  //};
   
   
 
@@ -296,7 +296,8 @@ function CreateTransaction() {
       totalAmount: calculateTotalAmount(),
       transactionItems: transactionItems,
       transactionAccounts: transactionAccounts,
-      description : description
+      description : description,
+      reminder:reminder
     });
 
 
@@ -345,6 +346,10 @@ function CreateTransaction() {
     setDescription(e.target.value);
   }
 
+  const handleReminderChange = (e) =>{
+    setReminder(e.target.value);
+  }
+
   const handleSubmitAndPrint = async (e) => {
     e.preventDefault();
 
@@ -371,7 +376,8 @@ function CreateTransaction() {
       totalAmount: calculateTotalAmount(),
       transactionItems: transactionItems,
       transactionAccounts: transactionAccounts,
-      description : description
+      description : description,
+      reminder : reminder
     });
 
 
@@ -466,6 +472,16 @@ function CreateTransaction() {
         id="description"
         value={description}
         onChange={handleDescriptionChange}
+      />
+  </div>
+
+  <div style={{ marginTop: '20px' }}>
+      <label htmlFor="reminder">Reminder:</label>
+      <input
+        type="text"
+        id="description"
+        value={reminder}
+        onChange={handleReminderChange}
       />
   </div>
 
