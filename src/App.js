@@ -14,6 +14,8 @@ import SearchTransaction from './Transaction/SearchTransaction';
 import SearchCustomerLedger from './Transaction/SearchCustomerLedger';
 import AccountDashboard from './Account/AccountDashboard';
 import IncomeStatement from './IncomeStatement/IncomeStatement'
+import OperationalCost from './OperationalCosts/OperationalCost';
+import TodaysOperationalCost from './OperationalCosts/TodaysOperationalCost';
 
 function App() {
   return (
@@ -44,6 +46,9 @@ function App() {
     <Route path="/income-statement" element={<IncomeStatement/>} />
     {/* <Route path="/create-account" element={<CreateAccount />} /> */}
 
+        {/* OperationalCost Routes */}
+        <Route path="/operational-cost" element={<OperationalCost/>} />
+        <Route path="/todays-operational-cost" element={<TodaysOperationalCost/>} />
       </Routes>
     </Router>
   );
