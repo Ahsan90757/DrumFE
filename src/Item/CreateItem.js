@@ -25,8 +25,6 @@ function CreateItem() {
 
     try {
       const response = await fetch("http://localhost:8080/api/items", requestOptions);
-      const data = await response.json();
-
       if (response.ok) {
         setMessage('Item successfully created.');
       } else if (response.status === 409) {

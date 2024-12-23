@@ -25,8 +25,6 @@ function CreateCustomer() {
 
     try {
       const response = await fetch("http://localhost:8080/api/customers", requestOptions);
-      const data = await response.json();
-
       if (response.ok) {
         setMessage('Customer successfully created.');
       } else if (response.status === 409) {
