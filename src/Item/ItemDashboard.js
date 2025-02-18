@@ -7,6 +7,8 @@ function ItemDashboard() {
   const [transactions, setTransactions] = useState({});
   const [selectedTransactionLimit, setSelectedTransactionLimit] = useState(25);
   const [expandedItem, setExpandedItem] = useState(null);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     fetch('http://localhost:8080/api/items')
@@ -15,12 +17,14 @@ function ItemDashboard() {
       .catch(error => console.error('Error fetching items:', error));
   }, []);
 
-  const fetchTransactions = (itemName, limit = selectedTransactionLimit) => {
-    fetch(`http://localhost:8080/api/transactions/sales/lastN/${limit}/${itemName}`)
+  const fetchTransactions = (itemName, limit = selectedTransactionLimit, page = 0) => {
+    fetch(`http://localhost:8080/api/transactions/sales/paginated/${itemName}/${page}/${limit}`)
       .then(response => response.json())
       .then(data => {
-        setTransactions((prev) => ({ ...prev, [itemName]: data }));
+        setTransactions((prev) => ({ ...prev, [itemName]: data.transactions }));
+        setTotalPages(data.totalPages); // Ensure total pages are set from the response
         setExpandedItem(itemName);
+        setPage(page); // Update the current page
       })
       .catch(error => console.error('Error fetching transactions:', error));
   };
@@ -28,9 +32,21 @@ function ItemDashboard() {
   // Refetch transactions when transaction limit changes and an item is expanded
   useEffect(() => {
     if (expandedItem) {
-      fetchTransactions(expandedItem, selectedTransactionLimit);
+      fetchTransactions(expandedItem, selectedTransactionLimit, 0); // Reset to first page
     }
   }, [selectedTransactionLimit]);
+
+  const handleNextPage = () => {
+    if (expandedItem && page < totalPages - 1) {
+      fetchTransactions(expandedItem, selectedTransactionLimit, page + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (expandedItem && page > 0) {
+      fetchTransactions(expandedItem, selectedTransactionLimit, page - 1);
+    }
+  };
 
   return (
     <div>
@@ -70,7 +86,8 @@ function ItemDashboard() {
                 </td>
               </tr>
 
-              {expandedItem === item.name && transactions[item.name] && (
+              {expandedItem === item.name && transactions[item.name]?.paginatedData?.length > 0 && (
+
                 <tr>
                   <td colSpan="3">
                     <table border="1" width="100%">
@@ -112,6 +129,15 @@ function ItemDashboard() {
                         })}
                       </tbody>
                     </table>
+                    <div style={{ marginTop: '10px' }}>
+                      <button onClick={handlePreviousPage} disabled={page === 0}>
+                        Previous Page
+                      </button>
+                      <span style={{ margin: '0 10px' }}>Page {page + 1} of {totalPages}</span>
+                      <button onClick={handleNextPage} disabled={page >= totalPages - 1}>
+                        Next Page
+                      </button>
+                    </div>
                   </td>
                 </tr>
               )}
