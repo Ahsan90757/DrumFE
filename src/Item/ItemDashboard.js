@@ -7,8 +7,7 @@ function ItemDashboard() {
   const [transactions, setTransactions] = useState({});
   const [selectedTransactionLimit, setSelectedTransactionLimit] = useState(25);
   const [expandedItem, setExpandedItem] = useState(null);
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetch('http://localhost:8080/api/items')
@@ -17,34 +16,33 @@ function ItemDashboard() {
       .catch(error => console.error('Error fetching items:', error));
   }, []);
 
-  const fetchTransactions = (itemName, limit = selectedTransactionLimit, page = 0) => {
+  const fetchTransactions = (itemName, page = 1, limit = selectedTransactionLimit) => {
     fetch(`http://localhost:8080/api/transactions/sales/paginated/${itemName}/${page}/${limit}`)
       .then(response => response.json())
       .then(data => {
-        setTransactions((prev) => ({ ...prev, [itemName]: data.transactions }));
-        setTotalPages(data.totalPages); // Ensure total pages are set from the response
+        setTransactions((prev) => ({ ...prev, [itemName]: { data, page } }));
         setExpandedItem(itemName);
-        setPage(page); // Update the current page
       })
       .catch(error => console.error('Error fetching transactions:', error));
   };
 
-  // Refetch transactions when transaction limit changes and an item is expanded
   useEffect(() => {
     if (expandedItem) {
-      fetchTransactions(expandedItem, selectedTransactionLimit, 0); // Reset to first page
+      fetchTransactions(expandedItem, currentPage, selectedTransactionLimit);
     }
-  }, [selectedTransactionLimit]);
+  }, [selectedTransactionLimit, currentPage]);
 
-  const handleNextPage = () => {
-    if (expandedItem && page < totalPages - 1) {
-      fetchTransactions(expandedItem, selectedTransactionLimit, page + 1);
-    }
+  const handlePageChange = (direction) => {
+    const newPage = direction === 'next' ? currentPage + 1 : currentPage - 1;
+    setCurrentPage(newPage);
   };
 
-  const handlePreviousPage = () => {
-    if (expandedItem && page > 0) {
-      fetchTransactions(expandedItem, selectedTransactionLimit, page - 1);
+  const toggleTransactions = (itemName) => {
+    if (expandedItem === itemName) {
+      setExpandedItem(null); // Collapse if the same item is clicked
+    } else {
+      setExpandedItem(itemName); // Expand if a new item is clicked
+      fetchTransactions(itemName, currentPage, selectedTransactionLimit); // Fetch transactions for the item
     }
   };
 
@@ -80,63 +78,72 @@ function ItemDashboard() {
                 <td style={{ paddingRight: '50px' }}>{item.name}</td>
                 <td style={{ paddingRight: '50px' }}>{item.remainingQuantity}</td>
                 <td>
-                  <button onClick={() => fetchTransactions(item.name)}>
+                  <button onClick={() => toggleTransactions(item.name)}>
                     {expandedItem === item.name ? 'Hide' : 'Show'} Transactions
                   </button>
                 </td>
               </tr>
 
-              {expandedItem === item.name && transactions[item.name]?.paginatedData?.length > 0 && (
-
+              {expandedItem === item.name && transactions[item.name] && (
                 <tr>
                   <td colSpan="3">
-                    <table border="1" width="100%">
-                      <thead>
-                        <tr>
-                          <th>Date</th>
-                          <th>Customer Name</th>
-                          <th>Quantity</th>
-                          <th>Balance</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Object.entries(transactions[item.name] || {}).map(([date, transList]) => {
-                          let runningBalance = item.remainingQuantity;
+                    <div style={{ border: '1px solid #ccc', padding: '10px' }}>
+                      <table border="1" width="100%">
+                        <thead>
+                          <tr>
+                            <th>Date</th>
+                            <th>Customer Name</th>
+                            <th>Quantity</th>
+                            <th>Balance</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Object.entries(transactions[item.name]?.data || {}).map(([date, transList]) => {
+                            let runningBalance = item.remainingQuantity;
 
-                          return (
-                            <React.Fragment key={date}>
-                              <tr>
-                                <td colSpan="4" style={{ fontWeight: 'bold', backgroundColor: '#f0f0f0' }}>
-                                  {date}
-                                </td>
-                              </tr>
+                            return (
+                              <React.Fragment key={date}>
+                                <tr>
+                                  <td colSpan="4" style={{ fontWeight: 'bold', backgroundColor: '#f0f0f0' }}>
+                                    {date}
+                                  </td>
+                                </tr>
 
-                              {(Array.isArray(transList) ? transList : []).map((transaction, index) => {
-                                let previousBalance = runningBalance;
-                                runningBalance -= transaction.quantity;
+                                {(Array.isArray(transList) ? transList : []).map((transaction, index) => {
+                                  let previousBalance = runningBalance;
+                                  runningBalance -= transaction.quantity;
 
-                                return (
-                                  <tr key={index}>
-                                    <td></td>
-                                    <td>{transaction.customerName}</td>
-                                    <td>{transaction.quantity}</td>
-                                    <td>{previousBalance.toFixed(2)}</td>
-                                  </tr>
-                                );
-                              })}
-                            </React.Fragment>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                    <div style={{ marginTop: '10px' }}>
-                      <button onClick={handlePreviousPage} disabled={page === 0}>
-                        Previous Page
-                      </button>
-                      <span style={{ margin: '0 10px' }}>Page {page + 1} of {totalPages}</span>
-                      <button onClick={handleNextPage} disabled={page >= totalPages - 1}>
-                        Next Page
-                      </button>
+                                  return (
+                                    <tr key={index}>
+                                      <td></td>
+                                      <td>{transaction.customerName}</td>
+                                      <td>{transaction.quantity}</td>
+                                      <td>{previousBalance.toFixed(2)}</td>
+                                    </tr>
+                                  );
+                                })}
+                              </React.Fragment>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+
+                      {/* Pagination inside the same div */}
+                      <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                        <button
+                          onClick={() => handlePageChange('previous')}
+                          disabled={currentPage <= 1}
+                        >
+                          Previous
+                        </button>
+                        <span> Page {currentPage} </span>
+                        <button
+                          onClick={() => handlePageChange('next')}
+                          disabled={transactions[expandedItem].data.length < selectedTransactionLimit}
+                        >
+                          Next
+                        </button>
+                      </div>
                     </div>
                   </td>
                 </tr>
