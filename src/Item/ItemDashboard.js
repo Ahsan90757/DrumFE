@@ -7,7 +7,7 @@ function ItemDashboard() {
   const [transactions, setTransactions] = useState({});
   const [selectedTransactionLimit, setSelectedTransactionLimit] = useState(25);
   const [expandedItem, setExpandedItem] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0);
 
   useEffect(() => {
     fetch('http://localhost:8080/api/items')
