@@ -16,6 +16,8 @@ import AccountDashboard from './Account/AccountDashboard';
 import IncomeStatement from './IncomeStatement/IncomeStatement'
 import OperationalCost from './OperationalCosts/OperationalCost';
 import TodaysOperationalCost from './OperationalCosts/TodaysOperationalCost';
+import AddCategory from './OperationalCosts/AddCategory';
+import EditCategory from './OperationalCosts/EditCategory';
 
 function App() {
   return (
@@ -49,6 +51,9 @@ function App() {
         {/* OperationalCost Routes */}
         <Route path="/operational-cost" element={<OperationalCost/>} />
         <Route path="/todays-operational-cost" element={<TodaysOperationalCost/>} />
+        <Route path="/add-category" element={<AddCategory/>} />
+        <Route path="/edit-category" element={<EditCategory/>} />
+        
       </Routes>
     </Router>
   );

@@ -1,20 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const TodaysOperationalCost = () => {
-  // Hardcoded categories and subcategories
-  const categories = {
-    Freight: null, // No subcategories
-    Wages: ["Ahsan", "Rayyan"], // Subcategories
-    Utility: ["Water", "Electricity"], // Subcategories
-  };
-
-  // State variables
+  const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSubcategory, setSelectedSubcategory] = useState("");
   const [amounts, setAmounts] = useState([]);
   const [amount, setAmount] = useState("");
 
-  // Handlers
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/api/categories"); // Adjust URL as needed
+      const data = await response.json();
+      setCategories(data);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
+
   const handleCategoryChange = (e) => {
     setSelectedCategory(e.target.value);
     setSelectedSubcategory("");
@@ -27,9 +33,8 @@ const TodaysOperationalCost = () => {
   };
 
   const handleAddAmount = () => {
-    if (!selectedCategory || (!categories[selectedCategory]?.length && !amount)) return;
+    if (!selectedCategory || (!categories.find(cat => cat.name === selectedCategory)?.subcategories?.length && !amount)) return;
 
-    // Add the amount
     setAmounts((prev) => [
       ...prev,
       {
@@ -51,38 +56,33 @@ const TodaysOperationalCost = () => {
       {/* Category Dropdown */}
       <div style={{ marginBottom: "15px" }}>
         <label htmlFor="category">Category: </label>
-        <select
-          id="category"
-          value={selectedCategory}
-          onChange={handleCategoryChange}
-        >
+        <select id="category" value={selectedCategory} onChange={handleCategoryChange}>
           <option value="">Select Category</option>
-          {Object.keys(categories).map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
+          {categories.map((cat) => (
+            <option key={cat._id} value={cat.name}>
+              {cat.name}
             </option>
           ))}
         </select>
       </div>
 
       {/* Subcategory Dropdown */}
-      {selectedCategory && categories[selectedCategory]?.length > 0 && (
-        <div style={{ marginBottom: "15px" }}>
-          <label htmlFor="subcategory">Subcategory: </label>
-          <select
-            id="subcategory"
-            value={selectedSubcategory}
-            onChange={handleSubcategoryChange}
-          >
-            <option value="">Select Subcategory</option>
-            {categories[selectedCategory].map((subcat) => (
-              <option key={subcat} value={subcat}>
-                {subcat}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+      {selectedCategory &&
+        categories.find(cat => cat.name === selectedCategory)?.subcategories?.length > 0 && (
+          <div style={{ marginBottom: "15px" }}>
+            <label htmlFor="subcategory">Subcategory: </label>
+            <select id="subcategory" value={selectedSubcategory} onChange={handleSubcategoryChange}>
+              <option value="">Select Subcategory</option>
+              {categories
+                .find(cat => cat.name === selectedCategory)
+                ?.subcategories.map((subcat, index) => (
+                  <option key={index} value={subcat}>
+                    {subcat}
+                  </option>
+                ))}
+            </select>
+          </div>
+        )}
 
       {/* Amount Input */}
       <div style={{ marginBottom: "15px" }}>
@@ -105,8 +105,7 @@ const TodaysOperationalCost = () => {
         <ul>
           {amounts.map((item, index) => (
             <li key={index}>
-              {item.category} {item.subcategory && `> ${item.subcategory}`} : $
-              {item.amount.toFixed(2)}
+              {item.category} {item.subcategory && `> ${item.subcategory}`} : ${item.amount.toFixed(2)}
             </li>
           ))}
         </ul>
