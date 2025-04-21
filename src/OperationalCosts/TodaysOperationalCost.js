@@ -13,7 +13,7 @@ const TodaysOperationalCost = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/categories"); // Adjust URL as needed
+      const response = await fetch("http://localhost:8080/api/categories");
       const data = await response.json();
       setCategories(data);
     } catch (error) {
@@ -48,6 +48,36 @@ const TodaysOperationalCost = () => {
 
   const calculateTotal = () =>
     amounts.reduce((total, item) => total + item.amount, 0);
+
+  const handleSubmit = async () => {
+    console.log("Submit button clicked");
+    console.log("Amounts to submit:", amounts);
+  
+    try {
+      for (const item of amounts) {
+        console.log("Submitting:", item);
+        const response = await fetch("http://localhost:8080/api/operational-costs", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(item),
+        });
+  
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to submit ${item.category}: ${errorText}`);
+        }
+      }
+  
+      alert("All data submitted successfully!");
+      setAmounts([]); // Clear list after successful submission
+    } catch (error) {
+      console.error("Error submitting data:", error);
+      alert("Error submitting one or more records.");
+    }
+  };
+  
 
   return (
     <div style={{ padding: "20px" }}>
@@ -113,6 +143,16 @@ const TodaysOperationalCost = () => {
 
       {/* Total Cost */}
       <h3>Total: {calculateTotal().toFixed(2)}</h3>
+
+      {/* Submit Button */}
+      {amounts.length > 0 && (
+        <>
+          <button onClick={handleSubmit} style={{ marginTop: "15px" }}>
+            Submit All
+          </button>
+          <pre>{JSON.stringify(amounts, null, 2)}</pre>
+        </>
+      )}
     </div>
   );
 };
