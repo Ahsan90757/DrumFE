@@ -18,6 +18,7 @@ import OperationalCost from './OperationalCosts/OperationalCost';
 import TodaysOperationalCost from './OperationalCosts/TodaysOperationalCost';
 import AddCategory from './OperationalCosts/AddCategory';
 import EditCategory from './OperationalCosts/EditCategory';
+import DailyLedger from './OperationalCosts/DailyLedger';
 
 function App() {
   return (
@@ -30,30 +31,31 @@ function App() {
         <Route path="/item-dashboard" element={<ItemDashboard />} />
         <Route path="/create-item" element={<CreateItem />} />
         <Route path="/delete-item" element={<DeleteItem />} />
-        
+
         {/* CUSTOMER ROUTES */}
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />
         <Route path="/create-customer" element={<CreateCustomer />} />
         <Route path="/delete-customer" element={<DeleteCustomer />} />
-        
+
         {/* TRANSACTION ROUTES */}
         <Route path="/transaction-dashboard" element={<TransactionDashboard />} />
         <Route path="/create-transaction" element={<CreateTransaction />} />
-        <Route path="/search-transaction/:transactionNumber" element={<SearchTransaction/>} />
+        <Route path="/search-transaction/:transactionNumber" element={<SearchTransaction />} />
         <Route path="/search-customer-ledger/:customerNumber" element={<SearchCustomerLedger />} />
         <Route path="/search-customer-ledger" element={<SearchCustomerLedger />} />
 
         {/* ACCOUNT ROUTES */}
-    <Route path="/account-dashboard" element={<AccountDashboard />} />
-    <Route path="/income-statement" element={<IncomeStatement/>} />
-    {/* <Route path="/create-account" element={<CreateAccount />} /> */}
+        <Route path="/account-dashboard" element={<AccountDashboard />} />
+        <Route path="/income-statement" element={<IncomeStatement />} />
+        {/* <Route path="/create-account" element={<CreateAccount />} /> */}
 
         {/* OperationalCost Routes */}
-        <Route path="/operational-cost" element={<OperationalCost/>} />
-        <Route path="/todays-operational-cost" element={<TodaysOperationalCost/>} />
-        <Route path="/add-category" element={<AddCategory/>} />
-        <Route path="/edit-category" element={<EditCategory/>} />
-        
+        <Route path="/operational-cost" element={<OperationalCost />} />
+        <Route path="/todays-operational-cost" element={<TodaysOperationalCost />} />
+        <Route path="/add-category" element={<AddCategory />} />
+        <Route path="/edit-category" element={<EditCategory />} />
+        <Route path="/daily-ledger" element = {<DailyLedger />} />
+
       </Routes>
     </Router>
   );

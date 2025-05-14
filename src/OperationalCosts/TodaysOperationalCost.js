@@ -22,7 +22,8 @@ const TodaysOperationalCost = () => {
   };
 
   const handleCategoryChange = (e) => {
-    setSelectedCategory(e.target.value);
+    const selectedName = e.target.value;
+    setSelectedCategory(selectedName);
     setSelectedSubcategory("");
     setAmount("");
   };
@@ -33,7 +34,12 @@ const TodaysOperationalCost = () => {
   };
 
   const handleAddAmount = () => {
-    if (!selectedCategory || (!categories.find(cat => cat.name === selectedCategory)?.subcategories?.length && !amount)) return;
+    if (!selectedCategory || !amount) return;
+
+    const selectedCatObj = categories.find(cat => cat.name === selectedCategory);
+    const hasSubcategories = selectedCatObj?.subcategories?.length > 0;
+
+    if (hasSubcategories && !selectedSubcategory) return;
 
     setAmounts((prev) => [
       ...prev,
@@ -43,6 +49,7 @@ const TodaysOperationalCost = () => {
         amount: parseFloat(amount),
       },
     ]);
+
     setAmount("");
   };
 
@@ -50,34 +57,38 @@ const TodaysOperationalCost = () => {
     amounts.reduce((total, item) => total + item.amount, 0);
 
   const handleSubmit = async () => {
-    console.log("Submit button clicked");
-    console.log("Amounts to submit:", amounts);
-  
     try {
       for (const item of amounts) {
-        console.log("Submitting:", item);
+        const payload = {
+          category: item.category,
+          subcategory: item.subcategory,
+          amount: item.amount,
+          date: new Date().toISOString(),
+        };
+
         const response = await fetch("http://localhost:8080/api/operational-costs", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(item),
+          body: JSON.stringify(payload),
         });
-  
+
         if (!response.ok) {
           const errorText = await response.text();
-          throw new Error(`Failed to submit ${item.category}: ${errorText}`);
+          throw new Error(`Failed to submit: ${errorText}`);
         }
       }
-  
+
       alert("All data submitted successfully!");
-      setAmounts([]); // Clear list after successful submission
+      setAmounts([]);
     } catch (error) {
       console.error("Error submitting data:", error);
       alert("Error submitting one or more records.");
     }
   };
-  
+
+  const selectedCategoryObj = categories.find(cat => cat.name === selectedCategory);
 
   return (
     <div style={{ padding: "20px" }}>
@@ -89,7 +100,7 @@ const TodaysOperationalCost = () => {
         <select id="category" value={selectedCategory} onChange={handleCategoryChange}>
           <option value="">Select Category</option>
           {categories.map((cat) => (
-            <option key={cat._id} value={cat.name}>
+            <option key={cat.name} value={cat.name}>
               {cat.name}
             </option>
           ))}
@@ -97,22 +108,23 @@ const TodaysOperationalCost = () => {
       </div>
 
       {/* Subcategory Dropdown */}
-      {selectedCategory &&
-        categories.find(cat => cat.name === selectedCategory)?.subcategories?.length > 0 && (
-          <div style={{ marginBottom: "15px" }}>
-            <label htmlFor="subcategory">Subcategory: </label>
-            <select id="subcategory" value={selectedSubcategory} onChange={handleSubcategoryChange}>
-              <option value="">Select Subcategory</option>
-              {categories
-                .find(cat => cat.name === selectedCategory)
-                ?.subcategories.map((subcat, index) => (
-                  <option key={index} value={subcat}>
-                    {subcat}
-                  </option>
-                ))}
-            </select>
-          </div>
-        )}
+      {selectedCategoryObj?.subcategories?.length > 0 && (
+        <div style={{ marginBottom: "15px" }}>
+          <label htmlFor="subcategory">Subcategory: </label>
+          <select
+            id="subcategory"
+            value={selectedSubcategory}
+            onChange={handleSubcategoryChange}
+          >
+            <option value="">Select Subcategory</option>
+            {selectedCategoryObj.subcategories.map((subcat, index) => (
+              <option key={index} value={subcat}>
+                {subcat}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Amount Input */}
       <div style={{ marginBottom: "15px" }}>
@@ -135,7 +147,8 @@ const TodaysOperationalCost = () => {
         <ul>
           {amounts.map((item, index) => (
             <li key={index}>
-              {item.category} {item.subcategory && `> ${item.subcategory}`} : ${item.amount.toFixed(2)}
+              {item.category}
+              {item.subcategory && ` > ${item.subcategory}`} : ${item.amount.toFixed(2)}
             </li>
           ))}
         </ul>
@@ -146,12 +159,9 @@ const TodaysOperationalCost = () => {
 
       {/* Submit Button */}
       {amounts.length > 0 && (
-        <>
-          <button onClick={handleSubmit} style={{ marginTop: "15px" }}>
-            Submit All
-          </button>
-          <pre>{JSON.stringify(amounts, null, 2)}</pre>
-        </>
+        <button onClick={handleSubmit} style={{ marginTop: "15px" }}>
+          Submit All
+        </button>
       )}
     </div>
   );
